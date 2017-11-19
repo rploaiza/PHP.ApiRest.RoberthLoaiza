@@ -22,6 +22,8 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class User implements \JsonSerializable
 {
+    const ID = 'id';
+    const __CLASS__= __CLASS__;
     /**
      * Id
      *
