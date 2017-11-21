@@ -48,8 +48,8 @@ class ApiResultController extends Controller
     }
 
     /**
-     * Summary: Returns a user based on a single ID
-     * Notes: Returns the user identified by &#x60;userId&#x60;.
+     * Summary: Returns a result based on a single ID
+     * Notes: Returns the result identified by &#x60;resultId&#x60;.
      *
      * @param int $resultId Result id
      *
@@ -72,9 +72,7 @@ class ApiResultController extends Controller
     }
 
     /**
-     * Creates a new result entity.
-     *
-     * Returns the result identified by &#x60;userId&#x60;.
+     * POST action
      *
      * @param Request $request request
      * @return JsonResponse
@@ -118,7 +116,7 @@ class ApiResultController extends Controller
 
     /**
      * Summary: Updates a result
-     * Notes: Updates the result identified by &#x60;userId&#x60;.
+     * Notes: Updates the result identified by &#x60;resultId&#x60;.
      *
      * @param Request $request request
      * @param int     $resultId  Result id
@@ -186,7 +184,7 @@ class ApiResultController extends Controller
 
     /**
      * Summary: Deletes a result entity.
-     * Notes: Returns the user identified by &#x60;userId&#x60;.
+     * Notes: Returns the results identified by &#x60;resultId&#x60;.
      *
      * @param int $resultId Result id
      *
