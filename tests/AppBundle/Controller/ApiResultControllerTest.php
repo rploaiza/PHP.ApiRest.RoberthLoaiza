@@ -34,6 +34,8 @@ class ApiResultControllerTest extends WebTestCase
     private static $_clientGet404;
     private static $_clientPut404;
 
+    private static $user;
+
     /**
      * This method is called before the first test of this test class is run.
      *
@@ -49,9 +51,28 @@ class ApiResultControllerTest extends WebTestCase
         self::$_clientGet = static::createClient();
         self::$_clientPut = static::createClient();
         self::$_clientDelete = static::createClient();
-        self::$_clientDelete404= static::createClient();
-        self::$_clientGet404= static::createClient();
-        self::$_clientPut404= static::createClient();
+        self::$_clientDelete404 = static::createClient();
+        self::$_clientGet404 = static::createClient();
+        self::$_clientPut404 = static::createClient();
+
+        $rand_num = mt_rand(0, 1000000);
+        $nombre = 'Nuevo UsEr POST * ' . $rand_num;
+        $p_data = [
+            'username' => $nombre,
+            'email' => 'email' . $rand_num . '@example.com',
+            'password' => 'P4ssW0r4 Us3r P0ST * ñ?¿ áËì·' . $rand_num,
+            'enabled' => mt_rand(0, 2),
+            'isAdmin' => mt_rand(0, 2)
+        ];
+
+        // 201
+        self::$_clientPostUser->request(
+            Request::METHOD_POST, self::RUTA_APIS,
+            [], [], [], json_encode($p_data)
+        );
+
+        $response = self::$_clientPostUser->getResponse();
+        self::$user = json_decode($response->getContent(), true);
     }
 
     /**
@@ -89,23 +110,6 @@ class ApiResultControllerTest extends WebTestCase
     }
 
     /**
-     * Test GET /results 200 Ok
-     *
-     * @return void
-     *
-     * @covers \AppBundle\Controller\ApiResultController::cgetResultAction()
-     */
-   public function testCGetAction200()
-    {
-        self::$_clientGet->request(Request::METHOD_GET, self::RUTA_API);
-        $response = self::$_clientGet->getResponse();
-        self::assertTrue($response->isSuccessful());
-        self::assertJson($response->getContent());
-        $result = json_decode($response->getContent(), true);
-        self::assertArrayHasKey('results', $result);
-    }
-
-    /**
      * Test POST /results 201 Created
      *
      *
@@ -114,26 +118,9 @@ class ApiResultControllerTest extends WebTestCase
     public function testPostResultAction201()
     {
         $rand_num = mt_rand(0, 1000000);
-        $nombre = 'Nuevo UsEr POST * ' . $rand_num;
+
         $p_data = [
-            'username' => $nombre,
-            'email'    => 'email' . $rand_num . '@example.com',
-            'password' => 'P4ssW0r4 Us3r P0ST * ñ?¿ áËì·' . $rand_num,
-            'enabled'  => mt_rand(0, 2),
-            'isAdmin'  => mt_rand(0, 2)
-        ];
-
-        // 201
-        self::$_clientPostUser->request(
-            Request::METHOD_POST, self::RUTA_APIS,
-            [], [], [], json_encode($p_data)
-        );
-
-        $response = self::$_clientPostUser->getResponse();
-        $user = json_decode($response->getContent(), true);
-
-        $p_data= [
-            'users_id' => $user['user']['id'],
+            'users_id' => self::$user['user']['id'],
             'result' => $rand_num
         ];
 
@@ -143,11 +130,11 @@ class ApiResultControllerTest extends WebTestCase
             [], [], [], json_encode($p_data)
         );
 
-        $response = self::$_clientPost201->getResponse();
-        self::assertEquals(Response::HTTP_CREATED, $response->getStatusCode());
-        self::assertTrue($response->isSuccessful());
-        self::assertJson($response->getContent());
-        $result = json_decode($response->getContent(), true);
+        $responses = self::$_clientPost201->getResponse();
+        self::assertEquals(Response::HTTP_CREATED, $responses->getStatusCode());
+        self::assertTrue($responses->isSuccessful());
+        self::assertJson($responses->getContent());
+        $result = json_decode($responses->getContent(), true);
         return $result;
     }
 
@@ -161,27 +148,10 @@ class ApiResultControllerTest extends WebTestCase
     public function testPostResultAction422()
     {
         $rand_num = mt_rand(0, 1000000);
-        $nombre = 'Nuevo UsEr POST * ' . $rand_num;
-        $p_data = [
-            'username' => $nombre,
-            'email'    => 'email' . $rand_num . '@example.com',
-            'password' => 'P4ssW0r4 Us3r P0ST * ñ?¿ áËì·' . $rand_num,
-            'enabled'  => mt_rand(0, 2),
-            'isAdmin'  => mt_rand(0, 2)
-        ];
-
-        // 201
-        self::$_clientPostUser->request(
-            Request::METHOD_POST, self::RUTA_APIS,
-            [], [], [], json_encode($p_data)
-        );
-
-        $response = self::$_clientPostUser->getResponse();
-        $user = json_decode($response->getContent(), true);
 
         $p_datas = [
-            'users_id' => $user['user']['id'],
-           // 'result' => $rand_num
+            'users_id' => self::$user['user']['id'],
+            // 'result' => $rand_num
         ];
 
         self::$_client->request(
@@ -194,7 +164,7 @@ class ApiResultControllerTest extends WebTestCase
             Response::HTTP_UNPROCESSABLE_ENTITY,
             $response->getStatusCode()
         );
-        $r_body = (string) $response->getContent();
+        $r_body = (string)$response->getContent();
         self::assertJson($r_body);
         self::assertContains('code', $r_body);
         self::assertContains('message', $r_body);
@@ -204,7 +174,24 @@ class ApiResultControllerTest extends WebTestCase
             Response::$statusTexts[422],
             $r_data['message']
         );
-      }
+    }
+
+    /**
+     * Test GET /results 200 Ok
+     *
+     * @return void
+     *
+     * @covers \AppBundle\Controller\ApiResultController::cgetResultAction()
+     */
+    public function testCGetAction200()
+    {
+        self::$_clientGet->request(Request::METHOD_GET, self::RUTA_API);
+        $response = self::$_clientGet->getResponse();
+        self::assertTrue($response->isSuccessful());
+        self::assertJson($response->getContent());
+        $result = json_decode($response->getContent(), true);
+        self::assertArrayHasKey('results', $result);
+    }
 
     /**
      * Test GET /results/resultId 200 Ok
@@ -224,7 +211,7 @@ class ApiResultControllerTest extends WebTestCase
         );
         $response = self::$_clientGetId->getResponse();
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
-        self::assertJson((string) $response->getContent());
+        self::assertJson((string)$response->getContent());
     }
 
     /**
@@ -241,26 +228,9 @@ class ApiResultControllerTest extends WebTestCase
     {
 
         $rand_num = mt_rand(0, 1000000);
-        $nombre = 'Nuevo UsEr POST * ' . $rand_num;
+
         $p_data = [
-            'username' => $nombre,
-            'email'    => 'email' . $rand_num . '@example.com',
-            'password' => 'P4ssW0r4 Us3r P0ST * ñ?¿ áËì·' . $rand_num,
-            'enabled'  => mt_rand(0, 2),
-            'isAdmin'  => mt_rand(0, 2)
-        ];
-
-        // 201
-        self::$_clientPostUser->request(
-            Request::METHOD_POST, self::RUTA_APIS,
-            [], [], [], json_encode($p_data)
-        );
-
-        $response = self::$_clientPostUser->getResponse();
-        $user = json_decode($response->getContent(), true);
-
-        $p_data= [
-            'users_id' => $user['user']['id'],
+            'users_id' => self::$user['user']['id'],
             'result' => $rand_num
         ];
 
@@ -271,9 +241,9 @@ class ApiResultControllerTest extends WebTestCase
         $response = self::$_clientPut->getResponse();
 
         self::assertEquals(209, $response->getStatusCode());
-        self::assertJson((string) $response->getContent());
-        $user_aux = json_decode((string) $response->getContent(), true);
-        self::assertEquals($result['id'],$user_aux['id']);
+        self::assertJson((string)$response->getContent());
+        $user_aux = json_decode((string)$response->getContent(), true);
+        self::assertEquals($result['id'], $user_aux['id']);
         self::assertEquals($p_data['result'], $user_aux['result']);
 
         return $user_aux;
@@ -299,7 +269,7 @@ class ApiResultControllerTest extends WebTestCase
         $response = self::$_clientDelete->getResponse();
 
         self::assertEquals(Response::HTTP_NO_CONTENT, $response->getStatusCode());
-        self::assertEmpty((string) $response->getContent());
+        self::assertEmpty((string)$response->getContent());
 
         return $result['id'];
     }
@@ -323,13 +293,14 @@ class ApiResultControllerTest extends WebTestCase
         $response = self::$_clientDelete404->getResponse();
 
         self::assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
-        $r_body = (string) $response->getContent();
+        $r_body = (string)$response->getContent();
         self::assertContains('code', $r_body);
         self::assertContains('message', $r_body);
         $r_data = json_decode($r_body, true);
         self::assertEquals(Response::HTTP_NOT_FOUND, $r_data['code']);
         self::assertEquals(Response::$statusTexts[404], $r_data['message']);
     }
+
     /**
      * Test GET /results/resultId 404 Not Found
      *
@@ -346,7 +317,7 @@ class ApiResultControllerTest extends WebTestCase
         $response = self::$_clientGet404->getResponse();
 
         self::assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
-        $r_body = (string) $response->getContent();
+        $r_body = (string)$response->getContent();
         self::assertContains('code', $r_body);
         self::assertContains('message', $r_body);
         $r_data = json_decode($r_body, true);
@@ -370,7 +341,7 @@ class ApiResultControllerTest extends WebTestCase
         $response = self::$_clientPut404->getResponse();
 
         self::assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
-        $r_body = (string) $response->getContent();
+        $r_body = (string)$response->getContent();
         self::assertContains('code', $r_body);
         self::assertContains('message', $r_body);
         $r_data = json_decode($r_body, true);
