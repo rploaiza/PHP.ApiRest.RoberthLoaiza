@@ -584,9 +584,16 @@
                     "type": "integer",
                     "format": "int64",
                     "default": 1
+                },
+                "users_id": {
+                    "description": "User Id",
+                    "type": "integer",
+                    "format": "int64",
+                    "default": 1
                 }
             },
             "example": {
+                "users_id":1,
                 "result": 84
             }
         },
