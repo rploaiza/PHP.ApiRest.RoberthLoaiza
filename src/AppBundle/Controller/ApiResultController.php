@@ -102,11 +102,21 @@ class ApiResultController extends Controller
         $entityRepository = $entityManager->getRepository(User::__CLASS__);
         $user = $entityRepository->findOneBy(array(User::ID => $postData['users_id']));
 
-        $result = new Result(
-            $postData['result'],
-            $user,
-            new \DateTime()
-        );
+        if (null == $user) {    // 404 - Not Found
+            return new JsonResponse(
+                new Message(Response::HTTP_NOT_FOUND,
+                    'Id user no encontrado'
+                ),
+                Response::HTTP_NOT_FOUND
+            );
+        } else {
+            $result = new Result(
+                $postData['result'],
+                $user,
+                new \DateTime()
+            );
+        }
+
         $entityManager->persist($result);
         $entityManager->flush();
 
@@ -119,7 +129,7 @@ class ApiResultController extends Controller
      * Notes: Updates the result identified by &#x60;resultId&#x60;.
      *
      * @param Request $request request
-     * @param int     $resultId  Result id
+     * @param int $resultId Result id
      *
      * @return JsonResponse
      *
@@ -148,7 +158,7 @@ class ApiResultController extends Controller
         if (null == $user) {    // 404 - Not Found
             return new JsonResponse(
                 new Message(Response::HTTP_NOT_FOUND,
-                   'Id user no encontrado'
+                    'Id user no encontrado'
                 ),
                 Response::HTTP_NOT_FOUND
             );
